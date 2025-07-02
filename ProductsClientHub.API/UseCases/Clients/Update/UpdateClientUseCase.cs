@@ -2,34 +2,27 @@
 using ProductsClientHub.API.Infra;
 using ProductsClientHub.API.UseCases.Clients.SharedValidator;
 using ProductsClientHub.Communication.Requests;
-using ProductsClientHub.Communication.Responses;
 using ProductsClientHub.Exceptions.ExceptionsBase;
 
-namespace ProductsClientHub.API.UseCases.Clients.Register;
+namespace ProductsClientHub.API.UseCases.Clients.Update;
 
-public class RegisterClientUseCase
+public class UpdateClientUseCase
 {
-    public ResponseShortClientJson Execute(RequestClientJson request)
+    public void Execute(Guid clientId, RequestClientJson request)
     {
         Validate(request);
 
         var dbContext = new ProductsClientsHubDbContext();
 
-        var entity = new Client()
-        {
-            Name = request.Name,
-            Email = request.Email,
-        };
+        var entity = dbContext.Clients.FirstOrDefault(client => client.Id == clientId);
 
-        dbContext.Clients.Add(entity);
+        if (entity is null) throw new NotFoundException("Cliente não encontrado.");
 
-        dbContext.SaveChanges();
+        entity.Name = request.Name;
+        entity.Email = request.Email;
 
-        return new ResponseShortClientJson()
-        {
-            Id = entity.Id,
-            Name = entity.Name,
-        };
+        dbContext.Clients.Update(entity);
+        dbContext.SaveChanges(); // não esquecer, após fazer a atualização, é necessário salvar as alterações no banco de dados.
     }
 
     private void Validate(RequestClientJson request)

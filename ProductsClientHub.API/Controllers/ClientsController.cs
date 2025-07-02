@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ProductsClientHub.API.UseCases.Clients.Delete;
+using ProductsClientHub.API.UseCases.Clients.GetAll;
+using ProductsClientHub.API.UseCases.Clients.GetById;
 using ProductsClientHub.API.UseCases.Clients.Register;
+using ProductsClientHub.API.UseCases.Clients.Update;
 using ProductsClientHub.Communication.Requests;
 using ProductsClientHub.Communication.Responses;
 using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
@@ -11,7 +15,7 @@ namespace ProductsClientHub.API.Controllers;
 public class ClientsController : ControllerBase
 {
     [HttpPost]
-    [ProducesResponseType(typeof(ResponseClientJson), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ResponseShortClientJson), StatusCodes.Status201Created)]
     public IActionResult Register([FromBody] RequestClientJson request)
     {
         RegisterClientUseCase useCase = new();
@@ -22,27 +26,48 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPut]
-    public IActionResult Update()
+    [Route("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public IActionResult Update([FromRoute] Guid id, [FromBody] RequestClientJson request)
     {
-        return Ok();
+        var useCase = new UpdateClientUseCase();
+
+        useCase.Execute(id, request);
+
+        return NoContent();
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(ResponseAllClientsJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult GetAll()
     {
-        return Ok();
+        var useCase = new GetAllClientsUseCase();
+
+        var response = useCase.execute();
+
+        if (response.Clients.Count == 0) return NoContent();
+
+        return Ok(response);
     }
 
     [HttpGet]
     [Route("{id}")]
+    [ProducesResponseType(typeof(ResponseClientJson), StatusCodes.Status200OK)]
     public IActionResult GetById([FromRoute] Guid id)
     {
-        return Ok(id);
+        var useCase = new GetClientByIdUseCase();
+        var response = useCase.Execute(id);
+        return Ok(response);
     }
 
     [HttpDelete]
-    public IActionResult Delete()
+    [Route("{id}")]
+
+    public IActionResult Delete(Guid id)
     {
+        var useCase = new DeleteClientUseCase();
+        useCase.Execute(id);
         return Ok();
     }
 }
